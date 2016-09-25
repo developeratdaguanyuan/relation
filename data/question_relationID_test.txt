@@ -1,1 +1,0 @@
-/home/dzhou/data/qa/generated/SimpleQuestions_v2/relation/question_relationID_test.txt
