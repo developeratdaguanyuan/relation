@@ -26,13 +26,20 @@ function DataLoader:nextBatch()
   local maxStep = self.data[dataIndex[1]]:size(1)
   local currentDataBatch = torch.LongTensor(self.batchSize, maxStep):fill(1)
   local currentMarkBatch = torch.LongTensor(self.batchSize):fill(1)
+  local currentNegMarkBatch = torch.LongTensor(self.batchSize):fill(1)
   for i = 1, self.batchSize, 1 do
     currentDataBatch[{{i}, {maxStep - self.data[dataIndex[i]]:size(1) + 1, maxStep}}]
       = self.data[dataIndex[i]]
     currentMarkBatch[{i}] = self.mark[dataIndex[i]]
   end
 
-  return {cudacheck(currentDataBatch:t()), cudacheck(currentMarkBatch)}
+  currentNegMarkBatch:random(1, self.maxClass)
+  currentNegMarkBatch:maskedSelect(
+    torch.eq(currentNegMarkBatch, currentMarkBatch)):random(1, self.maxClass)
+
+  return {cudacheck(currentDataBatch),
+          cudacheck(currentMarkBatch),
+          cudacheck(currentNegMarkBatch)}
 end
 
 function DataLoader:rerank(headList, cntList, dataSize)
