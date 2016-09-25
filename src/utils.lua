@@ -42,11 +42,12 @@ end
 
 -- main()
 function main()
+  require 'nn'
   local m = nn.LookupTable(5, 5)
   local m1, m2 = table.unpack(cloneModulesWithSharedParameters(m, 2))
 
   local m11, m12 = m1:parameters()
-  local m21, m22 = m1:parameters()
+  local m21, m22 = m2:parameters()
 
   m11[1][1][2] = 888
   print(m11[1])
