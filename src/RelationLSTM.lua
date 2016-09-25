@@ -5,7 +5,7 @@ require 'utils'
 local RelationLSTM = torch.class('RelationLSTM')
 
 function RelationLSTM:__init(opt)
-  if opt.useGPU > 0 then
+  if opt.useGPU == 1 then
     require 'cunn'
     require 'cutorch'
     torch.setdefaulttensortype('torch.CudaTensor')
@@ -13,16 +13,22 @@ function RelationLSTM:__init(opt)
     torch.setdefaulttensortype('torch.FloatTensor')
   end
 
-  self.batchSize = opt.batchSize
   self.trainDataPath = opt.trainDataFile
-  self.dataLoader = DataLoader(self.trainDataPath, self.batchSize)
+  self.validDataPath = opt.validDataFile
 
+  self.learningRate = opt.learningRate
+  self.costMargin = opt.costMargin
   self.vocabularySize = opt.vocabularySize
   self.vocabularyDim = opt.vocabularyDim
   self.relationSize = opt.relationSize
   self.relationDim = opt.relationDim
   self.hiddenSize = self.vocabularyDim
-  self.costMargin = opt.costMargin
+  self.batchSize = opt.batchSize
+
+  self.printEpoch = opt.printEpoch
+
+  self.dataLoader
+    = DataLoader(self.trainDataPath, self.batchSize, self.vocabularySize, self.relationSize)
 
   self.linkEmbedding = nn.LookupTable(self.relationSize, self.relationDim)
   self.wordEmbedding = nn.LookupTable(self.vocabularySize, self.vocabularyDim)
@@ -94,8 +100,8 @@ function RelationLSTM:train()
     self.negativeLink:backward(neg_label, dev_neg_link)
     self.negativeEncoder:backward(data, dev_neg_data)
 
-    self.encoderModel:updateParameters(0.01)
-    self.linkEmbeddingModel:updateParameters(0.01)
+    self.encoderModel:updateParameters(self.learningRate)
+    self.linkEmbeddingModel:updateParameters(self.learningRate)
   end
 end
 

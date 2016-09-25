@@ -18,31 +18,9 @@ cmd:option('-vocabularyDim', 300, 'word embedding size')
 cmd:option('-relationSize', 1837, 'relation size')
 cmd:option('-relationDim', 256, 'relation embedding size')
 cmd:option('-batchSize', 10, 'number of data in a batch')
-cmd:option('-printEveryNumIter', 10, 'print training loss every several iterations')
+cmd:option('-printEpoch', 10, 'print training loss every printEpoch iterations')
 
 local opt = cmd:parse(arg)
 local relationLSTM = RelationLSTM(opt)
 relationLSTM:train()
-
-
-
---            :add(nn.Linear(hiddenSize, nClass))
-
---[[
-local model_1 = nn.Sequential()
-            :add(nn.Sequencer(rnn))
-local output_1 = model_1:forward(data)
-print(output_1)
-]]
---local output = encoder:forward(data)
---print(output)
-
-
-
-
-
-
-
-
-
 

@@ -3,10 +3,12 @@ require 'utils'
 
 local DataLoader = torch.class('DataLoader')
 
-function DataLoader:__init(dataPath, batchSize)
+function DataLoader:__init(dataPath, batchSize, vocabularySize, relationSize)
   self.batchSize = batchSize == nil and 10 or batchSize
   self.data, self.mark, self.maxIndex, self.maxClass = unpack(self:createData(dataPath))
 
+  self.maxIndex = vocabularySize == nil and self.maxIndex or vocabularySize
+  self.maxClass = relationSize == nil and self.maxClass or relationSize
   self.dataSize = #self.data
   self.numBatch = math.floor(self.dataSize/self.batchSize)
   self.headList, self.cntList = unpack(self:groupData())
