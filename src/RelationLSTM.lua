@@ -1,10 +1,13 @@
 require 'rnn'
 require 'DataLoader'
 require 'utils'
+require 'logroll'
 
 local RelationLSTM = torch.class('RelationLSTM')
 
 function RelationLSTM:__init(opt)
+  self.log = logroll.file_logger('logs/info.log')
+
   if opt.useGPU == 1 then
     require 'cunn'
     require 'cutorch'
@@ -96,13 +99,13 @@ function RelationLSTM:train()
     self.linkEmbeddingModel:updateParameters(self.learningRate)
 
     if i % self.printEpoch == 0 then
-      print(string.format("[Iter %d]: %f", i, accumLoss / self.printEpoch))
+      self.log.info(string.format("[Iter %d]: %f", i, accumLoss / self.printEpoch))
       accumLoss = 0
     end
     -- evaluate and save model
     if i % self.dataLoader.numBatch == 0 then
       local epoch = i / self.dataLoader.numBatch
-      print(string.format("[Epoch %d]: %f", epoch, epochLoss / self.dataLoader.numBatch))
+      self.log.info(string.format("[Epoch %d]: %f", epoch, epochLoss / self.dataLoader.numBatch))
       --self:evaluate()
       --torch.save(self.modelDirectory.."/LSTM_"..epoch, self.biLSTM)
       epochLoss = 0
