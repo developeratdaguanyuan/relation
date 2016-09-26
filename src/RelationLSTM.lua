@@ -25,6 +25,7 @@ function RelationLSTM:__init(opt)
   self.hiddenSize = self.vocabularyDim
   self.batchSize = opt.batchSize
 
+  self.maxEpochs = opt.maxEpochs
   self.printEpoch = opt.printEpoch
 
   self.dataLoader
@@ -55,37 +56,28 @@ function RelationLSTM:__init(opt)
 end
 
 function RelationLSTM:train()
-  local accum_loss = 0
-  for i = 1, 10000000 do
+  local epochLoss, accumLoss = 0, 0
+  local maxIter = self.dataLoader.numBatch * self.maxEpochs
+  for i = 1, maxIter do
     self.encoderModel:zeroGradParameters()
     self.linkEmbeddingModel:zeroGradParameters()
 
     local data, pos_label, neg_label = unpack(self.dataLoader:nextBatch())
 
+--    local encoder_data = self.encoderModel:forward(data)
     local pos_data = self.positiveEncoder:forward(data)
     local neg_data = self.negativeEncoder:forward(data)
---    print(pos_data)
---    print(neg_data)
 
     local pos_link = self.positiveLink:forward(pos_label)
     local neg_link = self.negativeLink:forward(neg_label)
---    print(pos_link)
---    print(neg_link)
 
     local pos_score = self.positiveDotProduct:forward({pos_data, pos_link})
     local neg_score = self.negativeDotProduct:forward({neg_data, neg_link})
---    print(pos_score)
---    print(neg_score)
 
     local loss =
       self.criterion:forward({pos_score, neg_score}, torch.Tensor(self.batchSize):fill(1))
-
---    print(loss)
-    accum_loss = accum_loss + loss
-    if (i % 100 == 0) then
-      print(accum_loss)
-      accum_loss = 0
-    end
+    epochLoss = epochLoss + loss
+    accumLoss = accumLoss + loss
 
     local dev_score =
       self.criterion:backward({pos_score, neg_score}, torch.Tensor(self.batchSize):fill(1))
@@ -102,6 +94,19 @@ function RelationLSTM:train()
 
     self.encoderModel:updateParameters(self.learningRate)
     self.linkEmbeddingModel:updateParameters(self.learningRate)
+
+    if i % self.printEpoch == 0 then
+      print(string.format("[Iter %d]: %f", i, accumLoss / self.printEpoch))
+      accumLoss = 0
+    end
+    -- evaluate and save model
+    if i % self.dataLoader.numBatch == 0 then
+      local epoch = i / self.dataLoader.numBatch
+      print(string.format("[Epoch %d]: %f", epoch, epochLoss / self.dataLoader.numBatch))
+      --self:evaluate()
+      --torch.save(self.modelDirectory.."/LSTM_"..epoch, self.biLSTM)
+      epochLoss = 0
+    end
   end
 end
 
