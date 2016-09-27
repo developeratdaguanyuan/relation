@@ -33,6 +33,9 @@ function RelationLSTM:__init(opt)
 
   self.dataLoader
     = DataLoader(self.trainDataPath, self.batchSize, self.vocabularySize, self.relationSize)
+  self.validDataLoader
+    = DataLoader(self.validDataPath, 1, self.vocabularySize, self.relationSize)
+
 
   self.linkEmbedding = nn.LookupTable(self.relationSize, self.relationDim)
   self.wordEmbedding = nn.LookupTable(self.vocabularySize, self.vocabularyDim)
@@ -105,11 +108,35 @@ function RelationLSTM:train()
     -- evaluate and save model
     if i % self.dataLoader.numBatch == 0 then
       local epoch = i / self.dataLoader.numBatch
-      self.log.info(string.format("[Epoch %d]: %f", epoch, epochLoss / self.dataLoader.numBatch))
-      --self:evaluate()
+      local position = self:evaluate()
+      self.log.info(
+        string.format("[Epoch %d]: [training error %f]: [evaluating error %d]",
+        epoch, epochLoss / self.dataLoader.numBatch, position))
       --torch.save(self.modelDirectory.."/LSTM_"..epoch, self.biLSTM)
       epochLoss = 0
     end
   end
+end
+
+function RelationLSTM:evaluate()
+  local relationsID = torch.Tensor(self.relationSize)
+  local s = relationsID:storage()
+  for i = 1, s:size() do
+    s[i] = i
+  end
+  local relationsVector = self.linkEmbeddingModel:forward(relationsID)
+
+  local position = 0
+  local eDotProduct = cudacheck(nn.DotProduct())
+  for i = 1, self.validDataLoader.dataSize do
+    local data, label, _ = unpack(self.validDataLoader:nextBatch())
+    self.encoderModel:zeroGradParameters()
+    self.linkEmbeddingModel:zeroGradParameters()
+    local dataVector = torch.repeatTensor(self.encoderModel:forward(data), self.relationSize, 1)
+    local scoreVector = eDotProduct:forward({dataVector, relationsVector})
+
+    position = position + torch.gt(scoreVector, scoreVector[label[1]]):sum() / self.validDataLoader.dataSize
+  end
+  return position
 end
 
