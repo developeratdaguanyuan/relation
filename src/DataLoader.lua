@@ -15,7 +15,7 @@ function DataLoader:__init(dataPath, batchSize, vocabularySize, relationSize)
 end
 
 function DataLoader:nextBatch()
-  if self.currentIndex == nil or self.currentIndex + self.batchSize > self.dataSize then
+  if self.currentIndex == nil or self.currentIndex + self.batchSize - 1 > self.dataSize then
     self.currentIndex = 1
     self.indices = self:rerank(self.headList, self.cntList, self.dataSize)
   end
@@ -71,6 +71,7 @@ function DataLoader:createData(path)
     maxIndex = math.max(maxIndex, torch.max(data))
     maxClass = math.max(maxClass, mark)
   end
+  file:close()
   return {dataset, markset, maxIndex, maxClass}
 end
 
