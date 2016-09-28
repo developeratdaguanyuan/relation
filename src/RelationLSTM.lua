@@ -65,6 +65,8 @@ function RelationLSTM:train()
   local epochLoss, accumLoss = 0, 0
   local maxIter = self.dataLoader.numBatch * self.maxEpochs
   for i = 1, maxIter do
+    xlua.progress(i, maxIter)
+
     self.encoderModel:zeroGradParameters()
     self.linkEmbeddingModel:zeroGradParameters()
 
