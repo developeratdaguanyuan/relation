@@ -2,9 +2,11 @@ require 'nn'
 require 'rnn'
 require 'DataLoader'
 require 'RelationLSTM'
+require 'RelationBiLSTM'
 
 
 local cmd = torch.CmdLine()
+cmd:option('-algorithm', 'bilstm', 'Algorithm Options')
 cmd:option('-trainDataFile', '../data/question_relationID_train_tiny.txt', 'training data file')
 cmd:option('-validDataFile', '../data/question_relationID_valid_tiny.txt', 'validation data file')
 cmd:option('-wordEmbeddingFile', '../data/embedding.txt')
@@ -22,6 +24,13 @@ cmd:option('-maxEpochs', 10000, 'number of full passes through training data')
 cmd:option('-printEpoch', 10, 'print training loss every printEpoch iterations')
 
 local opt = cmd:parse(arg)
-local relationLSTM = RelationLSTM(opt)
-relationLSTM:train()
+
+if opt.algorithm == 'lstm' then
+  local relationLSTM = RelationLSTM(opt)
+  relationLSTM:train()
+end
+if opt.algorithm == 'bilstm' then
+  local relationBiLSTM = RelationBiLSTM(opt)
+  relationBiLSTM:train()
+end
 
