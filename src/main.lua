@@ -3,10 +3,11 @@ require 'rnn'
 require 'DataLoader'
 require 'RelationLSTM'
 require 'RelationBiLSTM'
+require 'Relation2BiLSTM'
 
 
 local cmd = torch.CmdLine()
-cmd:option('-algorithm', 'bilstm', 'Algorithm Options')
+cmd:option('-algorithm', '2bilstm', 'Algorithm Options')
 cmd:option('-trainDataFile', '../data/question_relationID_train_tiny.txt', 'training data file')
 cmd:option('-validDataFile', '../data/question_relationID_valid_tiny.txt', 'validation data file')
 cmd:option('-wordEmbeddingFile', '../data/embedding.txt')
@@ -32,5 +33,9 @@ end
 if opt.algorithm == 'bilstm' then
   local relationBiLSTM = RelationBiLSTM(opt)
   relationBiLSTM:train()
+end
+if opt.algorithm == '2bilstm' then
+  local relation2BiLSTM = Relation2BiLSTM(opt)
+  relation2BiLSTM:train()
 end
 
