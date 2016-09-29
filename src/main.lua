@@ -21,7 +21,7 @@ cmd:option('-vocabularyDim', 300, 'word embedding size')
 cmd:option('-relationSize', 1837, 'relation size')
 cmd:option('-relationDim', 256, 'relation embedding size')
 cmd:option('-batchSize', 10, 'number of data in a batch')
-cmd:option('-maxEpochs', 10000, 'number of full passes through training data')
+cmd:option('-maxEpochs', 100, 'number of full passes through training data')
 cmd:option('-printEpoch', 10, 'print training loss every printEpoch iterations')
 
 local opt = cmd:parse(arg)
