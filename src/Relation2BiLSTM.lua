@@ -139,7 +139,7 @@ function Relation2BiLSTM:train()
         string.format("[Epoch %d]: [training error %f]: [evaluating error %d]",
         epoch, epochLoss / self.dataLoader.numBatch, position))
       --torch.save(self.modelDirectory.."/LSTM_"..epoch, self.biLSTM)
-      chLoss = 0
+      epochLoss = 0
     end
   end
 end
