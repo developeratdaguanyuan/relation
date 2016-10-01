@@ -18,6 +18,8 @@ function Relation2BiLSTM:__init(opt)
 
   self.trainDataPath = opt.trainDataFile
   self.validDataPath = opt.validDataFile
+  self.modelDirectory = opt.modelDirectory
+
 
   self.learningRate = opt.learningRate
   self.costMargin = opt.costMargin
@@ -40,6 +42,10 @@ function Relation2BiLSTM:__init(opt)
   self.linkEmbedding = nn.LookupTable(self.relationSize, self.relationDim)
   self.wordEmbedding = nn.LookupTable(self.vocabularySize, self.vocabularyDim)
 
+  -- load Word Embedding
+  if opt.useEmbed == 1 then
+    self:loadEmbedding(opt.wordEmbeddingFile)
+  end
 
   self.firstlayerForward = nn.Sequential()
             :add(nn.Sequencer(self.wordEmbedding))
@@ -80,6 +86,19 @@ function Relation2BiLSTM:__init(opt)
   self.negativeDotProduct = cudacheck(nn.DotProduct())
 
   self.criterion = cudacheck(nn.MarginRankingCriterion(self.costMargin))
+end
+
+function Relation2BiLSTM:loadEmbedding(wordEmbeddingFile)
+  local wordEmbedFile = io.open(wordEmbeddingFile, 'r')
+  local tokens = split(wordEmbedFile:read(), " ")
+  local vocabSize, dimension = tonumber(tokens[1]), tonumber(tokens[2])
+  for i = 1, vocabSize, 1 do
+    local line_tokens = split(wordEmbedFile:read(), " ")
+    for j = 2, #line_tokens, 1 do
+      self.wordEmbedding.weight[i][j - 1] = tonumber(line_tokens[j])
+    end
+  end
+  wordEmbedFile:close()
 end
 
 function Relation2BiLSTM:train()
@@ -138,7 +157,7 @@ function Relation2BiLSTM:train()
       self.log.info(
         string.format("[Epoch %d]: [training error %f]: [evaluating error %d]",
         epoch, epochLoss / self.dataLoader.numBatch, position))
-      --torch.save(self.modelDirectory.."/LSTM_"..epoch, self.biLSTM)
+        torch.save(self.modelDirectory.."/2BiLSTM/2BiLSTM_"..epoch, {self.encoderModel, self.linkEmbeddingModel})
       epochLoss = 0
     end
   end
